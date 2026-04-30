@@ -2,7 +2,7 @@ import { z } from "zod";
 import { TASK_STATUS } from "../constants/taskStatus";
 
 export const createTaskSchema = z.object({
-  title: z.string().min(1, "Title is required").max(100, "Title too long"),
+  title: z.string().min(1, "Title is required").max(100, "Title is too long"),
   description: z.string().max(500, "Description too long").optional(),
 });
 
