@@ -8,7 +8,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void
   try {
     const users = await getAllUsersService();
     sendSuccess(res, "Users fetched successfully", { count: users.length, users });
-  } catch (error: unknown) {
+  } catch {
     sendError(res, "Failed to fetch users");
   }
 };
@@ -46,7 +46,7 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    const deleted = await deleteUserService(targetId);
+    const deleted = await deleteUserService(targetId, adminId); // pass adminId for updatedBy
     sendSuccess(res, "User deleted successfully", deleted);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to delete user";

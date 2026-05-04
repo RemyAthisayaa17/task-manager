@@ -10,7 +10,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     sendSuccess(res, "User registered successfully", user, HTTP_STATUS.CREATED);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Registration failed";
-    const statusCode = message === "Email already registered" ? 409 : HTTP_STATUS.SERVER_ERROR;
+    const statusCode =
+      message === "Email already registered"
+        ? HTTP_STATUS.CONFLICT
+        : HTTP_STATUS.SERVER_ERROR;
     sendError(res, message, statusCode);
   }
 };
@@ -21,7 +24,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     sendSuccess(res, "Login successful", result);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Login failed";
-    const statusCode = message === "Invalid credentials" ? HTTP_STATUS.UNAUTHORIZED : HTTP_STATUS.SERVER_ERROR;
+    const statusCode =
+      message === "Invalid credentials"
+        ? HTTP_STATUS.UNAUTHORIZED
+        : HTTP_STATUS.SERVER_ERROR;
     sendError(res, message, statusCode);
   }
 };

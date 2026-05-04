@@ -13,6 +13,7 @@ export const getAllUsersService = async () => {
       role: true,
       isActive: true,
       createdAt: true,
+      createdBy: true,
       _count: { select: { tasks: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -32,6 +33,7 @@ export const getUserByIdService = async (userId: number) => {
       role: true,
       isActive: true,
       createdAt: true,
+      createdBy: true,
       tasks: {
         where: { isVoid: false },
         orderBy: { createdAt: "desc" },
@@ -43,19 +45,19 @@ export const getUserByIdService = async (userId: number) => {
   return user;
 };
 
-export const deleteUserService = async (userId: number) => {
+export const deleteUserService = async (userId: number, adminId: number) => {
   const user = await prisma.user.findFirst({ where: { id: userId, isVoid: false } });
 
   if (!user) throw new Error("User not found");
 
   await prisma.task.updateMany({
     where: { userId, isVoid: false },
-    data: { isVoid: true, isActive: false },
+    data: { isVoid: true, isActive: false, updatedBy: adminId },
   });
 
   return await prisma.user.update({
     where: { id: userId },
-    data: { isVoid: true, isActive: false },
+    data: { isVoid: true, isActive: false, updatedBy: adminId },
     select: { id: true, name: true, email: true },
   });
 };
