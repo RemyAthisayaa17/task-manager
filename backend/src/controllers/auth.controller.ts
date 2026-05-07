@@ -21,7 +21,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await loginService(req.body);
-    sendSuccess(res, "Login successful", result);
+    sendSuccess(res, "Login successful", result, HTTP_STATUS.OK);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Login failed";
     const statusCode =
@@ -33,5 +33,5 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const getProfile = (req: AuthRequest, res: Response): void => {
-  sendSuccess(res, "Profile fetched successfully", req.user);
+  sendSuccess(res, "Profile fetched successfully", req.user ?? null, HTTP_STATUS.OK);
 };

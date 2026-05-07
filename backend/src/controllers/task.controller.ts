@@ -12,9 +12,9 @@ import {
   getPaginatedTasksService,
 } from "../services/task.service";
 import { TASK_STATUS } from "../constants/taskStatus";
-import { HTTP_STATUS } from "../constants/httpStatus";
+import { HTTP_STATUS, HttpStatusValue } from "../constants/httpStatus";
 
-const getErrorStatus = (message: string): number => {
+const getErrorStatus = (message: string): HttpStatusValue => {
   if (message === "Task not found") return HTTP_STATUS.NOT_FOUND;
   if (message === "Forbidden") return HTTP_STATUS.FORBIDDEN;
   return HTTP_STATUS.SERVER_ERROR;
@@ -28,8 +28,8 @@ export const createTask = async (req: AuthRequest, res: Response): Promise<void>
       userId: req.user!.id,
     });
     sendSuccess(res, "Task created successfully", task, HTTP_STATUS.CREATED);
-  } catch (error: unknown) {
-    sendError(res, "Failed to create task");
+  } catch {
+    sendError(res, "Failed to create task", HTTP_STATUS.SERVER_ERROR);
   }
 };
 
@@ -38,8 +38,8 @@ export const getAllTasks = async (req: AuthRequest, res: Response): Promise<void
     const { id: userId, role } = req.user!;
     const tasks = await getAllTasksService(userId, role);
     sendSuccess(res, "Tasks fetched successfully", { count: tasks.length, tasks });
-  } catch (error: unknown) {
-    sendError(res, "Failed to fetch tasks");
+  } catch {
+    sendError(res, "Failed to fetch tasks", HTTP_STATUS.SERVER_ERROR);
   }
 };
 
@@ -88,8 +88,8 @@ export const searchTasks = async (req: AuthRequest, res: Response): Promise<void
 
     const tasks = await searchTasksService(userId, role, query);
     sendSuccess(res, "Search results fetched", { count: tasks.length, tasks });
-  } catch (error: unknown) {
-    sendError(res, "Search failed");
+  } catch {
+    sendError(res, "Search failed", HTTP_STATUS.SERVER_ERROR);
   }
 };
 
@@ -107,8 +107,8 @@ export const filterTasks = async (req: AuthRequest, res: Response): Promise<void
 
     const tasks = await filterTasksByStatusService(userId, role, status);
     sendSuccess(res, "Filtered tasks fetched", { count: tasks.length, tasks });
-  } catch (error: unknown) {
-    sendError(res, "Filter failed");
+  } catch {
+    sendError(res, "Filter failed", HTTP_STATUS.SERVER_ERROR);
   }
 };
 
@@ -120,7 +120,7 @@ export const getPaginatedTasks = async (req: AuthRequest, res: Response): Promis
 
     const result = await getPaginatedTasksService(userId, role, page, limit);
     sendSuccess(res, "Tasks fetched with pagination", result);
-  } catch (error: unknown) {
-    sendError(res, "Pagination failed");
+  } catch {
+    sendError(res, "Pagination failed", HTTP_STATUS.SERVER_ERROR);
   }
 };
