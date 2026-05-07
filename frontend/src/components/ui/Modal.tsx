@@ -1,39 +1,33 @@
 import { ReactNode } from "react";
-import { FiX } from "react-icons/fi";
 
 interface ModalProps {
   title: string;
+  subtitle?: string;
   onClose: () => void;
   children: ReactNode;
 }
 
-export const Modal = ({ title, onClose, children }: ModalProps) => {
+export const Modal = ({ title, subtitle, onClose, children }: ModalProps) => {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      
-      {/* IMPORTANT: stop propagation ONLY on modal box */}
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      onMouseDown={(e) => {
+        // ONLY backdrop click closes modal
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6"
-        onClick={(e) => e.stopPropagation()}
+        className="bg-white w-full max-w-md rounded-xl shadow-lg"
+        onMouseDown={(e) => e.stopPropagation()} // hard stop propagation fix
       >
-
-        {/* Header (NO X BUTTON as per your rule) */}
-        <h2 className="text-lg font-semibold mb-4 text-gray-800">
-          {title}
-        </h2>
-
-        {children}
-
-        {/* Only Cancel allowed */}
-        <div className="mt-5 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm"
-          >
-            Cancel
-          </button>
+        <div className="p-4 border-b">
+          <h2 className="font-semibold">{title}</h2>
+          {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
         </div>
 
+        <div className="p-4">{children}</div>
       </div>
     </div>
   );

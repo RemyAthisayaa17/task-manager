@@ -27,7 +27,6 @@ type UpdateFormValues = {
 const TaskForm = ({ task, onSubmit, onCancel, loading = false }: Props) => {
   const isEdit = !!task;
 
-  // ── React Hook Form setup ────────────────────────────────────────────────────
   const {
     register,
     handleSubmit,
@@ -40,7 +39,6 @@ const TaskForm = ({ task, onSubmit, onCancel, loading = false }: Props) => {
       : { title: "", description: "" },
   });
 
-  // Pre-fill when task changes (switching edits)
   useEffect(() => {
     if (task) {
       reset({ title: task.title, description: task.description ?? "", status: task.status });
@@ -55,7 +53,6 @@ const TaskForm = ({ task, onSubmit, onCancel, loading = false }: Props) => {
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4" noValidate>
-      {/* Title */}
       <Input
         label="Title"
         required
@@ -64,7 +61,6 @@ const TaskForm = ({ task, onSubmit, onCancel, loading = false }: Props) => {
         {...register("title")}
       />
 
-      {/* Description */}
       <Textarea
         label="Description"
         placeholder="Optional details..."
@@ -73,7 +69,6 @@ const TaskForm = ({ task, onSubmit, onCancel, loading = false }: Props) => {
         {...register("description")}
       />
 
-      {/* Status — only shown on edit */}
       {isEdit && (
         <Select
           label="Status"
@@ -85,8 +80,7 @@ const TaskForm = ({ task, onSubmit, onCancel, loading = false }: Props) => {
         </Select>
       )}
 
-      {/* Actions */}
-      <div className="flex gap-3 pt-1">
+      <div className="flex gap-2.5 pt-1">
         <Button
           type="button"
           variant="secondary"

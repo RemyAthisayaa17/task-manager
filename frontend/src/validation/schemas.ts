@@ -1,8 +1,8 @@
 import * as yup from "yup";
 
-// ─── Shared password rule — must match backend Zod schema exactly ─────────────
+// ─── Shared password rule — matches backend Zod schema exactly ────────────────
 // Backend: min 8, 1 uppercase, 1 number, 1 special character
-const passwordRule = yup
+const strongPasswordRule = yup
   .string()
   .min(8, "Password must be at least 8 characters")
   .matches(/[A-Z]/, "Must contain at least 1 uppercase letter")
@@ -17,8 +17,8 @@ export const loginSchema = yup.object({
     .string()
     .email("Please enter a valid email address")
     .required("Email is required"),
-  // Login password uses the same strong rule so the hint is consistent
-  password: passwordRule,
+  // Login only needs non-empty — the server validates credentials
+  password: yup.string().min(1, "Password is required").required("Password is required"),
 });
 
 export const registerSchema = yup.object({
@@ -38,13 +38,14 @@ export const registerSchema = yup.object({
     .required("Phone is required"),
   address: yup
     .string()
-    .min(5, "Address is too short")
+    .min(3, "Address is required")
     .required("Address is required"),
+  
   gender: yup
     .string()
-    .oneOf(["male", "female" ], "Please select a valid gender")
+    .oneOf(["male", "female"], "Please select a valid gender")
     .required("Gender is required"),
-  password: passwordRule,
+  password: strongPasswordRule,
 });
 
 // ─── Task Schemas ─────────────────────────────────────────────────────────────
@@ -79,7 +80,7 @@ export const updateTaskSchema = yup.object({
 
 // ─── Types inferred from schemas ─────────────────────────────────────────────
 
-export type LoginFormValues     = yup.InferType<typeof loginSchema>;
-export type RegisterFormValues  = yup.InferType<typeof registerSchema>;
+export type LoginFormValues      = yup.InferType<typeof loginSchema>;
+export type RegisterFormValues   = yup.InferType<typeof registerSchema>;
 export type CreateTaskFormValues = yup.InferType<typeof createTaskSchema>;
 export type UpdateTaskFormValues = yup.InferType<typeof updateTaskSchema>;

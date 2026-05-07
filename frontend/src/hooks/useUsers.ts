@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { User } from "../types/models";
 import { getAllUsersApi, deleteUserApi } from "../api/admin.api";
+import { showToast } from "../utils/toast";
 
 interface UseUsersReturn {
   users: User[];
@@ -30,7 +31,9 @@ export const useUsers = (): UseUsersReturn => {
       const res = await getAllUsersApi();
       setUsers(res.data?.users ?? []);
     } catch {
-      setError("Failed to load users.");
+      const msg = "Failed to load users.";
+      setError(msg);
+      showToast(msg, "error");
     } finally {
       setLoading(false);
     }
@@ -40,15 +43,19 @@ export const useUsers = (): UseUsersReturn => {
     fetchUsers();
   }, [fetchUsers]);
 
+  // NOTE: Confirmation is handled by DeleteUserModal — no window.confirm here
   const deleteUser = async (id: number): Promise<boolean> => {
-    if (!window.confirm("Delete this user and all their tasks? This cannot be undone.")) return false;
     try {
       await deleteUserApi(id);
-      setSuccess("User deleted successfully.");
+      const msg = "User removed successfully.";
+      setSuccess(msg);
+      showToast(msg, "success");
       fetchUsers();
       return true;
     } catch (err: any) {
-      setError(err.response?.data?.message ?? "Failed to delete user.");
+      const msg = err.response?.data?.message ?? "Failed to delete user.";
+      setError(msg);
+      showToast(msg, "error");
       return false;
     }
   };

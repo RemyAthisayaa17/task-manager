@@ -58,13 +58,12 @@ export interface PaginatedTasksResponse {
 
 // ─── API Response ─────────────────────────────────────────────────────────────
 
-export interface ApiResponse<T = null> {
-  success: boolean;
+export interface ApiResponse<T> {
+  code: number;
   message: string;
   data: T;
   errors?: string[];
 }
-
 // ─── Form Inputs ──────────────────────────────────────────────────────────────
 
 export interface LoginInput {

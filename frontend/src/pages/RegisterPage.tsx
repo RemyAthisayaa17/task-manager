@@ -1,11 +1,12 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useEffect } from "react";
+import { FiCheckSquare } from "react-icons/fi";
 
 import { registerApi } from "../api/auth.api";
 import { Input, Select, Button } from "../components/ui";
 import { showToast } from "../utils/toast";
-
 import { registerSchema, RegisterFormValues } from "../validation/schemas";
 
 const RegisterPage = () => {
@@ -23,51 +24,92 @@ const RegisterPage = () => {
   const onSubmit = async (data: RegisterFormValues) => {
     try {
       const res = await registerApi(data);
-
-      if (!res.success) {
+      if (res.code !== 201) {
         showToast(res.message || "Registration failed", "error");
         return;
       }
-
-      showToast("Account created 🎉", "success");
+      showToast("Account created successfully", "success");
       navigate("/login");
     } catch (err: any) {
-      showToast(err.response?.data?.message || "Registration failed", "error");
+      const msg =
+        err.response?.data?.errors?.[0] ||
+        err.response?.data?.message ||
+        "Registration failed";
+      showToast(msg, "error");
     }
   };
 
-  const firstError = Object.keys(errors)[0] as keyof RegisterFormValues;
-  if (firstError) setTimeout(() => setFocus(firstError), 0);
+  useEffect(() => {
+    const firstError = Object.keys(errors)[0] as keyof RegisterFormValues;
+    if (firstError) setFocus(firstError);
+  }, [errors, setFocus]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4">
+    <div className="min-h-screen flex bg-slate-50">
+      {/* Left accent panel */}
+      <div className="hidden lg:flex w-80 bg-indigo-600 flex-col justify-between p-10 flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+            <FiCheckSquare size={16} className="text-white" />
+          </div>
+          <span className="font-semibold text-white text-sm">TaskFlow</span>
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-white leading-snug mb-3">
+            Start organizing<br />your work today.
+          </h2>
+          <p className="text-indigo-200 text-sm leading-relaxed">
+            Create an account to get started with task tracking, team management, and more.
+          </p>
+        </div>
+        <p className="text-indigo-300 text-xs">TaskFlow &copy; {new Date().getFullYear()}</p>
+      </div>
 
-      <div className="w-full max-w-md">
+      {/* Right form panel */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm">
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 flex flex-col gap-5">
-
-          {/* Header */}
-          <div className="text-center mb-2">
-            <h1 className="text-2xl font-semibold text-gray-800">
-              Create account
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Start managing your tasks
-            </p>
+          {/* Mobile logo */}
+          <div className="flex items-center gap-2 mb-8 lg:hidden">
+            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
+              <FiCheckSquare size={13} className="text-white" />
+            </div>
+            <span className="font-semibold text-slate-800 text-sm">TaskFlow</span>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-slate-900">Create account</h1>
+            <p className="text-sm text-slate-500 mt-1">Fill in your details to get started</p>
+          </div>
 
-            <Input label="Name" required error={errors.name?.message} {...register("name")} />
+          {/* All fields stacked vertically — no side-by-side layout */}
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
+            <Input
+              label="Full Name"
+              required
+              placeholder="Enter your full name"
+              error={errors.name?.message}
+              {...register("name")}
+            />
 
-            <Input label="Email" required error={errors.email?.message} {...register("email")} />
+            <Input
+              label="Email"
+              type="email"
+              required
+              placeholder="Enter your email"
+              error={errors.email?.message}
+              {...register("email")}
+            />
 
-            <Input label="Phone" required error={errors.phone?.message} {...register("phone")} />
+            <Input
+              label="Phone"
+              type="tel"
+              required
+              placeholder="Enter your phone number"
+              error={errors.phone?.message}
+              {...register("phone")}
+            />
 
-            <Input label="Address" required error={errors.address?.message} {...register("address")} />
-
-            {/* Gender FIXED */}
             <Select
               label="Gender"
               required
@@ -77,33 +119,37 @@ const RegisterPage = () => {
               <option value="">Select gender</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
-              
             </Select>
+
+            <Input
+              label="Address"
+              required
+              placeholder="Enter your address"
+              error={errors.address?.message}
+              {...register("address")}
+            />
 
             <Input
               label="Password"
               type="password"
               required
+              placeholder="Enter password (Min 8 chars, 1 uppercase, 1 number)"
               error={errors.password?.message}
               {...register("password")}
             />
 
-            <Button loading={isSubmitting} className="w-full mt-2">
+            <Button loading={isSubmitting} className="w-full mt-1" size="lg">
               Create Account
             </Button>
-
           </form>
 
-          {/* Footer */}
-          <p className="text-sm text-center text-gray-500 mt-2">
+          <p className="text-sm text-center text-slate-500 mt-6">
             Already have an account?{" "}
-            <Link to="/login" className="text-blue-600 font-medium hover:underline">
-              Login
+            <Link to="/login" className="text-indigo-600 font-semibold hover:text-indigo-700 transition-colors">
+              Sign in
             </Link>
           </p>
-
         </div>
-
       </div>
     </div>
   );

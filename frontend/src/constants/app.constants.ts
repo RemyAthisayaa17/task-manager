@@ -8,12 +8,9 @@ export const ROLES = {
   USER: "user",
 } as const;
 
+// Backend default port is 3000 (see backend/src/server.ts: PORT || 3000)
+// Override via VITE_API_BASE_URL in .env
 export const API_BASE_URL =
-  (import.meta as any).env?.VITE_API_BASE_URL ?? "http://localhost:5000/api";
+  (import.meta as any).env?.VITE_API_BASE_URL ?? "http://localhost:3000/api";
 
 export const PAGINATION_LIMIT = 10;
-
-// ─── Admin credentials (single assigned admin account) ────────────────────────
-
-export const ADMIN_EMAIL    = "admin@taskmanager.com";
-export const ADMIN_PASSWORD = "Admin@1234";
