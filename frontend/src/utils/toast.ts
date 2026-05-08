@@ -63,8 +63,8 @@ export const showToast = (message: string, type: ToastType) => {
     setTimeout(() => toast.remove(), 280);
   };
 
-  // 4 seconds — long enough to read all toast types comfortably
-  const AUTO_DISMISS_MS = 4000;
+  
+  const AUTO_DISMISS_MS = 3000;
 
   const timer = setTimeout(dismiss, AUTO_DISMISS_MS);
 

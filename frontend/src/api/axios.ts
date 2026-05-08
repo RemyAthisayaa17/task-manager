@@ -16,10 +16,16 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+
+const AUTH_PATHS = ["/auth/login", "/auth/register"];
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const requestUrl: string = error.config?.url ?? "";
+    const isAuthRoute = AUTH_PATHS.some((p) => requestUrl.includes(p));
+
+    if (error.response?.status === 401 && !isAuthRoute) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";

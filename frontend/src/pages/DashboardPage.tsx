@@ -204,7 +204,7 @@ const DashboardPage = () => {
 
         {/* Pagination — shown only when backend provides pagination data (not filtered/searched)
             Null-safe: totalPages defaults to 0 so this block simply won't render when pagination is null */}
-        {!loading && totalPages > 1 && (
+        {!loading && totalPages >= 1 && (
           <div className="flex justify-center items-center mt-6 gap-2">
             <Button
               variant="secondary"

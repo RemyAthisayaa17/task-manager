@@ -228,11 +228,9 @@ interface ModalProps {
 export const Modal = ({ title, subtitle, onClose, children }: ModalProps) => (
   <div
     className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-    onClick={(e) => e.target === e.currentTarget && onClose()}
   >
     <div
       className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in"
-      onClick={(e) => e.stopPropagation()}
     >
       {/* Header — NO X button per spec */}
       <div className="px-6 pt-6 pb-4 border-b border-slate-100">
