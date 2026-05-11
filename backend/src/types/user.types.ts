@@ -23,3 +23,10 @@ export interface LoginInput {
   email: string;
   password: string;
 }
+
+export interface UserQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: string;
+}

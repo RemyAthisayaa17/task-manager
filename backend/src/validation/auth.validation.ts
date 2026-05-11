@@ -5,8 +5,8 @@ export const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone: z.string().min(7, "Phone must be at least 7 characters"),
   address: z.string().min(3, "Address is required"),
-  gender: z.enum(["male", "female", "other"], {
-    message: "Gender must be male, female or other",
+  gender: z.enum(["male", "female"] ,{
+    message: "Gender must be male or female",
   }),
   password: z
     .string()
