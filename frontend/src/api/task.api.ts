@@ -4,13 +4,28 @@ import type {
   Task,
   CreateTaskInput,
   UpdateTaskInput,
-  PaginatedTasksResponse,
+  UnifiedTasksResponse,
 } from "../types/models";
 
-export const getAllTasksApi = async (): Promise<
-  ApiResponse<{ count: number; tasks: Task[] }>
-> => {
-  const res = await api.get("/tasks");
+export interface TaskQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  /** Admin only: filter tasks by the role of their owner (admin | user) */
+  userRole?: string;
+}
+
+export const getTasksApi = async (
+  params: TaskQueryParams = {}
+): Promise<ApiResponse<UnifiedTasksResponse>> => {
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
+  if (params.search?.trim()) query.set("search", params.search.trim());
+  if (params.status) query.set("status", params.status);
+  if (params.userRole) query.set("userRole", params.userRole);
+  const res = await api.get(`/tasks?${query.toString()}`);
   return res.data;
 };
 
@@ -36,27 +51,5 @@ export const updateTaskApi = async (
 
 export const deleteTaskApi = async (id: number): Promise<ApiResponse<null>> => {
   const res = await api.delete(`/tasks/${id}`);
-  return res.data;
-};
-
-export const searchTasksApi = async (
-  query: string
-): Promise<ApiResponse<{ count: number; tasks: Task[] }>> => {
-  const res = await api.get(`/tasks/search?q=${encodeURIComponent(query)}`);
-  return res.data;
-};
-
-export const filterTasksApi = async (
-  status: string
-): Promise<ApiResponse<{ count: number; tasks: Task[] }>> => {
-  const res = await api.get(`/tasks/filter?status=${status}`);
-  return res.data;
-};
-
-export const getPaginatedTasksApi = async (
-  page: number,
-  limit: number
-): Promise<ApiResponse<PaginatedTasksResponse>> => {
-  const res = await api.get(`/tasks/paginated?page=${page}&limit=${limit}`);
   return res.data;
 };

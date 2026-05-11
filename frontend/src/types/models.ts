@@ -9,7 +9,14 @@ export interface User {
   gender?: string;
   role: string;
   isActive?: boolean;
+
   createdAt?: string;
+  createdBy?: number;
+  createdByName?: string | null;
+  updatedAt?: string;
+  updatedBy?: number;
+  updatedByName?: string | null;
+
   /** Returned by admin service: prisma _count relation */
   _count?: { tasks: number };
 }
@@ -33,8 +40,15 @@ export interface Task {
   description?: string;
   status: string;
   userId: number;
+
   createdAt: string;
   updatedAt: string;
+
+  createdBy?: number;
+  createdByName?: string | null;
+  updatedBy?: number;
+  updatedByName?: string | null;
+
   user?: {
     id: number;
     name: string;
@@ -51,8 +65,28 @@ export interface PaginationMeta {
   totalPages: number;
 }
 
-export interface PaginatedTasksResponse {
+export interface TaskStats {
+  total: number;
+  pending: number;
+  completed: number;
+}
+
+export interface UserStats {
+  total: number;
+  admins: number;
+  members: number;
+}
+
+export interface UnifiedTasksResponse {
   tasks: Task[];
+  stats: TaskStats;
+  pagination: PaginationMeta;
+  isFiltered: boolean;
+}
+
+export interface UnifiedUsersResponse {
+  users: User[];
+  stats: UserStats;
   pagination: PaginationMeta;
 }
 
@@ -64,6 +98,7 @@ export interface ApiResponse<T> {
   data: T;
   errors?: string[];
 }
+
 // ─── Form Inputs ──────────────────────────────────────────────────────────────
 
 export interface LoginInput {

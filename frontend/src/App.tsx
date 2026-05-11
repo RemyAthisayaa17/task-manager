@@ -4,6 +4,7 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import AdminPage from "./pages/AdminPage";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import PublicRoute from "./components/common/PublicRoute";
 import { AuthProvider } from "./context/AuthContext";
 
 const App = () => {
@@ -11,9 +12,27 @@ const App = () => {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+
+          {/* FIX: PublicRoute blocks authenticated users from accessing login/register */}
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <RegisterPage />
+              </PublicRoute>
+            }
+          />
+
+          {/* Protected: any authenticated user */}
           <Route
             path="/dashboard"
             element={
@@ -22,6 +41,8 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+
+          {/* Protected: admin only */}
           <Route
             path="/admin"
             element={
@@ -30,6 +51,9 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+
+          {/* Catch-all: redirect unknown URLs */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

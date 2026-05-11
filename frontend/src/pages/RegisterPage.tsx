@@ -133,7 +133,7 @@ const RegisterPage = () => {
               label="Password"
               type="password"
               required
-              placeholder="Enter password (Min 8 chars, 1 uppercase, 1 number)"
+              placeholder="Enter Min 8 chars,1 uppercase, 1 num,1 special char"
               error={errors.password?.message}
               {...register("password")}
             />

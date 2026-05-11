@@ -34,7 +34,7 @@ export const registerSchema = yup.object({
   phone: yup
     .string()
     .min(7, "Phone number is too short")
-    .max(15, "Phone number is too long")
+    .max(10, "Phone number is too long")
     .required("Phone is required"),
   address: yup
     .string()

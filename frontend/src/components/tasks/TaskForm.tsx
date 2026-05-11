@@ -4,7 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import type { Task, CreateTaskInput, UpdateTaskInput } from "../../types/models";
 import { TASK_STATUS } from "../../constants/app.constants";
 import { createTaskSchema, updateTaskSchema } from "../../validation/schemas";
-import { Input, Textarea, Select, Button } from "../ui";
+import { Input, Textarea, Select, Button, Alert } from "../ui";
 
 interface Props {
   task?: Task | null;
@@ -26,6 +26,8 @@ type UpdateFormValues = {
 
 const TaskForm = ({ task, onSubmit, onCancel, loading = false }: Props) => {
   const isEdit = !!task;
+  // Issue #6: completed tasks cannot be edited
+  const isCompleted = task?.status === TASK_STATUS.COMPLETED;
 
   const {
     register,
@@ -46,6 +48,19 @@ const TaskForm = ({ task, onSubmit, onCancel, loading = false }: Props) => {
       reset({ title: "", description: "" });
     }
   }, [task, reset]);
+
+  if (isCompleted) {
+    return (
+      <div className="flex flex-col gap-4">
+        <Alert type="info">
+          This task is completed and cannot be edited.
+        </Alert>
+        <Button type="button" variant="secondary" onClick={onCancel} className="w-full">
+          Close
+        </Button>
+      </div>
+    );
+  }
 
   const handleFormSubmit = async (data: CreateFormValues | UpdateFormValues) => {
     await onSubmit(data);

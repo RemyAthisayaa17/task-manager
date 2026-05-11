@@ -4,32 +4,31 @@ import { useAuth } from "../context/AuthContext";
 import { useUsers } from "../hooks/useUsers";
 import { Badge, Button, Spinner, EmptyState } from "../components/ui";
 import DeleteUserModal from "../components/ui/DeleteUserModal";
-import { FiUsers, FiShield, FiUser, FiSearch, FiTrash2 } from "react-icons/fi";
+import {
+  FiUsers,
+  FiShield,
+  FiUser,
+  FiSearch,
+  FiTrash2,
+  FiX,
+  FiChevronLeft,
+  FiChevronRight,
+} from "react-icons/fi";
+import { ROLES } from "../constants/app.constants";
 
 const AdminPage = () => {
   const { user: currentUser } = useAuth();
-  const { users, loading, deleteUser } = useUsers();
+  const {
+    users, loading, pagination, stats,
+    page, setPage,
+    draftSearch, setDraftSearch, submitSearch,
+    clearFilters, deleteUser,
+  } = useUsers();
 
-  const [searchQuery, setSearchQuery] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
 
-  const adminUsers = users.filter(u => u.role === "admin");
-  const regularUsers = users.filter(u => u.role === "user");
-
-  const filteredUsers = users.filter(u => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      u.name.toLowerCase().includes(q) ||
-      u.email.toLowerCase().includes(q)
-    );
-  });
-
-  // Admin always pinned at top
-  const sortedFiltered = [
-    ...filteredUsers.filter(u => u.role === "admin"),
-    ...filteredUsers.filter(u => u.role === "user"),
-  ];
+  const isSearchActive = !!draftSearch;
+  const totalPages = pagination?.totalPages ?? 0;
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
@@ -44,37 +43,18 @@ const AdminPage = () => {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-xl font-bold text-slate-900">User Management</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Manage all registered users and their accounts</p>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Manage all registered users and their accounts
+          </p>
         </div>
 
-        {/* Stat cards */}
-        {users.length > 0 && (
+        {/* Global stat cards */}
+        {!loading && stats.total > 0 && (
           <div className="grid grid-cols-3 gap-3 mb-6">
             {[
-              {
-                label: "Total Users",
-                value: users.length,
-                icon: FiUsers,
-                color: "text-indigo-600",
-                bg: "bg-indigo-50",
-                iconBg: "bg-indigo-100",
-              },
-              {
-                label: "Admins",
-                value: adminUsers.length,
-                icon: FiShield,
-                color: "text-purple-600",
-                bg: "bg-purple-50",
-                iconBg: "bg-purple-100",
-              },
-              {
-                label: "Members",
-                value: regularUsers.length,
-                icon: FiUser,
-                color: "text-emerald-600",
-                bg: "bg-emerald-50",
-                iconBg: "bg-emerald-100",
-              },
+              { label: "Total Users", value: stats.total, icon: FiUsers, color: "text-indigo-600", bg: "bg-indigo-50", iconBg: "bg-indigo-100" },
+              { label: "Admins", value: stats.admins, icon: FiShield, color: "text-purple-600", bg: "bg-purple-50", iconBg: "bg-purple-100" },
+              { label: "Members", value: stats.members, icon: FiUser, color: "text-emerald-600", bg: "bg-emerald-50", iconBg: "bg-emerald-100" },
             ].map((s) => (
               <div key={s.label} className={`${s.bg} rounded-xl p-4 border border-slate-200`}>
                 <div className="flex items-center gap-2.5 mb-2">
@@ -89,19 +69,35 @@ const AdminPage = () => {
           </div>
         )}
 
-        {/* Search */}
+        {/* Search only — no role filter dropdown */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-3.5 mb-5">
-          <div className="relative">
-            <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm
-                focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500
-                placeholder-slate-400 bg-white"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={draftSearch}
+                onChange={(e) => setDraftSearch(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && submitSearch()}
+                className="w-full border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500
+                  placeholder-slate-400 bg-white"
+              />
+            </div>
+            <Button onClick={submitSearch} size="sm" variant="secondary">
+              Search
+            </Button>
+            {isSearchActive && (
+              <button
+                onClick={clearFilters}
+                className="px-2.5 py-2 rounded-lg text-xs font-medium text-slate-500
+                  hover:bg-slate-100 transition-colors flex items-center gap-1 border border-slate-200"
+                title="Clear search"
+              >
+                <FiX size={12} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -109,9 +105,14 @@ const AdminPage = () => {
         {loading ? (
           <Spinner text="Loading users..." />
         ) : users.length === 0 ? (
-          <EmptyState title="No users found" subtitle="No registered users in the system." />
-        ) : sortedFiltered.length === 0 ? (
-          <EmptyState title="No results" subtitle={`No users match "${searchQuery}"`} />
+          <EmptyState
+            title={isSearchActive ? "No results" : "No users found"}
+            subtitle={
+              isSearchActive
+                ? "No users match your search."
+                : "No registered users in the system."
+            }
+          />
         ) : (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <table className="w-full text-sm">
@@ -136,9 +137,9 @@ const AdminPage = () => {
               </thead>
 
               <tbody className="divide-y divide-slate-100">
-                {sortedFiltered.map((u) => {
+                {users.map((u) => {
                   const isSelf = u.id === currentUser?.id;
-                  const isAdminUser = u.role === "admin";
+                  const isAdminUser = u.role === ROLES.ADMIN;
                   const taskCount = u._count?.tasks ?? 0;
 
                   return (
@@ -146,7 +147,6 @@ const AdminPage = () => {
                       key={u.id}
                       className={`transition-colors hover:bg-slate-50 ${isSelf ? "bg-indigo-50/40" : ""}`}
                     >
-                      {/* User info */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
                           <div
@@ -169,21 +169,16 @@ const AdminPage = () => {
                         </div>
                       </td>
 
-                      {/* Role */}
                       <td className="px-5 py-3.5">
-                        <Badge color={isAdminUser ? "purple" : "indigo"}>
-                          {u.role}
-                        </Badge>
+                        <Badge color={isAdminUser ? "purple" : "indigo"}>{u.role}</Badge>
                       </td>
 
-                      {/* Task count */}
                       <td className="px-5 py-3.5 hidden sm:table-cell">
                         <span className={`text-sm font-medium ${taskCount > 0 ? "text-slate-700" : "text-slate-300"}`}>
                           {taskCount}
                         </span>
                       </td>
 
-                      {/* Joined */}
                       <td className="px-5 py-3.5 text-slate-400 text-xs hidden md:table-cell">
                         {u.createdAt
                           ? new Date(u.createdAt).toLocaleDateString("en-US", {
@@ -194,7 +189,6 @@ const AdminPage = () => {
                           : "—"}
                       </td>
 
-                      {/* Actions */}
                       <td className="px-5 py-3.5 text-right">
                         {!isSelf ? (
                           <button
@@ -216,17 +210,45 @@ const AdminPage = () => {
               </tbody>
             </table>
 
-            <div className="px-5 py-2.5 bg-slate-50 border-t border-slate-100">
+            {/* Pagination footer */}
+            <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
               <p className="text-xs text-slate-400">
-                {sortedFiltered.length} of {users.length} user{users.length !== 1 ? "s" : ""}
-                {searchQuery && ` matching "${searchQuery}"`}
+                {pagination
+                  ? `${users.length} of ${stats.total} user${stats.total !== 1 ? "s" : ""}`
+                  : `${users.length} user${users.length !== 1 ? "s" : ""}`}
+                {isSearchActive && " (filtered)"}
               </p>
+
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1}
+                    className="flex items-center gap-1"
+                  >
+                    <FiChevronLeft size={12} /> Prev
+                  </Button>
+                  <span className="text-xs text-slate-500 font-medium">
+                    {page} / {totalPages}
+                  </span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setPage(page + 1)}
+                    disabled={page === totalPages}
+                    className="flex items-center gap-1"
+                  >
+                    Next <FiChevronRight size={12} />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         )}
       </div>
 
-      {/* Delete user confirmation modal */}
       {deleteTarget && (
         <DeleteUserModal
           userName={deleteTarget.name}

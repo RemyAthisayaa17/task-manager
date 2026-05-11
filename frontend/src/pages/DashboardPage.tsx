@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Task, CreateTaskInput, UpdateTaskInput } from "../types/models";
-import { TASK_STATUS } from "../constants/app.constants";
+import { TASK_STATUS, ROLES } from "../constants/app.constants";
 import TaskCard from "../components/tasks/TaskCard";
 import TaskForm from "../components/tasks/TaskForm";
 import DeleteTaskModal from "../components/ui/DeleteTaskModal";
@@ -8,16 +8,16 @@ import Sidebar from "../components/common/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { useTasks } from "../hooks/useTasks";
 import { Modal, Button, Spinner, EmptyState, Badge } from "../components/ui";
-import { FiPlus, FiSearch, FiX } from "react-icons/fi";
+import { FiPlus, FiSearch, FiX, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 const DashboardPage = () => {
   const { isAdmin, user } = useAuth();
 
   const {
-    tasks, loading, pagination,
-    draftSearch, statusFilter, page,
+    tasks, loading, pagination, stats,
+    draftSearch, statusFilter, userRoleFilter, page,
     setDraftSearch, setPage,
-    submitSearch, applyFilter, clearFilters,
+    submitSearch, applyStatusFilter, applyUserRoleFilter, clearFilters,
     createTask, updateTask, deleteTask,
   } = useTasks();
 
@@ -56,17 +56,14 @@ const DashboardPage = () => {
   };
 
   const openEdit = (task: Task) => {
+    if (task.status === TASK_STATUS.COMPLETED) return;
     setEditingTask(task);
     setShowForm(true);
   };
 
-  // Safely resolve pagination values — pagination may be null when search/filter is active
   const totalPages = pagination?.totalPages ?? 0;
-  const isFiltered = !!statusFilter || !!draftSearch;
-
-  // Stats
-  const pendingCount = tasks.filter(t => t.status === TASK_STATUS.PENDING).length;
-  const completedCount = tasks.filter(t => t.status === TASK_STATUS.COMPLETED).length;
+  const activeFilter = statusFilter || userRoleFilter;
+  const isFiltered = !!activeFilter || !!draftSearch;
 
   return (
     <Sidebar>
@@ -88,13 +85,13 @@ const DashboardPage = () => {
           </Button>
         </div>
 
-        {/* Summary cards */}
-        {!loading && tasks.length > 0 && !isFiltered && (
+        {/* Global stats — constant across all pages */}
+        {!loading && stats.total > 0 && (
           <div className="grid grid-cols-3 gap-3 mb-6">
             {[
-              { label: "Total", value: pagination?.total ?? tasks.length, color: "text-slate-700", bg: "bg-white" },
-              { label: "Pending", value: pendingCount, color: "text-amber-600", bg: "bg-amber-50" },
-              { label: "Completed", value: completedCount, color: "text-emerald-600", bg: "bg-emerald-50" },
+              { label: "Total", value: stats.total, color: "text-slate-700", bg: "bg-white" },
+              { label: "Pending", value: stats.pending, color: "text-amber-600", bg: "bg-amber-50" },
+              { label: "Completed", value: stats.completed, color: "text-emerald-600", bg: "bg-emerald-50" },
             ].map((s) => (
               <div key={s.label} className={`${s.bg} rounded-xl p-4 border border-slate-200 text-center`}>
                 <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
@@ -127,46 +124,69 @@ const DashboardPage = () => {
               </Button>
             </div>
 
-            {/* Filters */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <button
-                onClick={() => applyFilter(TASK_STATUS.PENDING)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border
-                  ${statusFilter === TASK_STATUS.PENDING
-                    ? "bg-amber-50 text-amber-700 border-amber-200"
-                    : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
-                  }`}
-              >
-                Pending
-              </button>
-              <button
-                onClick={() => applyFilter(TASK_STATUS.COMPLETED)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border
-                  ${statusFilter === TASK_STATUS.COMPLETED
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
-                  }`}
-              >
-                Completed
-              </button>
+            {/* FIX #2: Admin sees role-based filter; regular users see status filter */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {isAdmin ? (
+                <select
+                  value={userRoleFilter}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (!val) clearFilters();
+                    else applyUserRoleFilter(val);
+                  }}
+                  className="border border-slate-300 rounded-lg px-3 py-2 text-xs font-medium
+                    bg-white text-slate-700 focus:outline-none focus:ring-2
+                    focus:ring-indigo-500/40 focus:border-indigo-500 cursor-pointer"
+                >
+                  <option value="">All Roles</option>
+                  <option value={ROLES.ADMIN}>Admin</option>
+                  <option value={ROLES.USER}>User</option>
+                </select>
+              ) : (
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (!val) clearFilters();
+                    else applyStatusFilter(val);
+                  }}
+                  className="border border-slate-300 rounded-lg px-3 py-2 text-xs font-medium
+                    bg-white text-slate-700 focus:outline-none focus:ring-2
+                    focus:ring-indigo-500/40 focus:border-indigo-500 cursor-pointer"
+                >
+                  <option value="">All Status</option>
+                  <option value={TASK_STATUS.PENDING}>Pending</option>
+                  <option value={TASK_STATUS.COMPLETED}>Completed</option>
+                </select>
+              )}
+
               {isFiltered && (
                 <button
                   onClick={clearFilters}
-                  className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500
+                  className="px-2.5 py-2 rounded-lg text-xs font-medium text-slate-500
                     hover:bg-slate-100 transition-colors flex items-center gap-1 border border-slate-200"
+                  title="Clear filters"
                 >
-                  <FiX size={11} /> Clear
+                  <FiX size={12} />
                 </button>
               )}
             </div>
           </div>
 
-          {/* Active filter indicator */}
           {isFiltered && (
             <div className="mt-2.5 flex items-center gap-2">
               <span className="text-xs text-slate-400">Filtered by:</span>
-              {statusFilter && <Badge color={statusFilter === "pending" ? "yellow" : "green"}>{statusFilter}</Badge>}
-              {draftSearch && !statusFilter && (
+              {userRoleFilter && (
+                <Badge color={userRoleFilter === ROLES.ADMIN ? "purple" : "indigo"}>
+                  {userRoleFilter}
+                </Badge>
+              )}
+              {statusFilter && (
+                <Badge color={statusFilter === TASK_STATUS.PENDING ? "yellow" : "green"}>
+                  {statusFilter}
+                </Badge>
+              )}
+              {draftSearch && !activeFilter && (
                 <Badge color="indigo">"{draftSearch}"</Badge>
               )}
             </div>
@@ -180,17 +200,18 @@ const DashboardPage = () => {
           <EmptyState
             title="No tasks found"
             subtitle={
-              statusFilter
+              userRoleFilter
+                ? `No tasks found for ${userRoleFilter} role.`
+                : statusFilter
                 ? `No ${statusFilter} tasks.`
                 : draftSearch
                 ? "No tasks match your search."
-                : "Create your first task to get started."
+                : "Create your first task using the New Task button above."
             }
-            action={<Button onClick={openCreate} size="sm"><FiPlus size={13} /> New Task</Button>}
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {tasks.map(task => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 items-stretch">
+            {tasks.map((task) => (
               <TaskCard
                 key={task.id}
                 task={task}
@@ -202,34 +223,34 @@ const DashboardPage = () => {
           </div>
         )}
 
-        {/* Pagination — shown only when backend provides pagination data (not filtered/searched)
-            Null-safe: totalPages defaults to 0 so this block simply won't render when pagination is null */}
-        {!loading && totalPages >= 1 && (
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
           <div className="flex justify-center items-center mt-6 gap-2">
             <Button
               variant="secondary"
               size="sm"
               onClick={() => setPage(page - 1)}
               disabled={page === 1}
+              className="flex items-center gap-1"
             >
-              Previous
+              <FiChevronLeft size={13} /> Previous
             </Button>
             <span className="px-3 py-1.5 text-xs text-slate-500 font-medium bg-white border border-slate-200 rounded-lg">
-              {page} / {totalPages}
+              {page} / {totalPages} · {stats.total} total
             </span>
             <Button
               variant="secondary"
               size="sm"
               onClick={() => setPage(page + 1)}
               disabled={page === totalPages}
+              className="flex items-center gap-1"
             >
-              Next
+              Next <FiChevronRight size={13} />
             </Button>
           </div>
         )}
       </div>
 
-      {/* Create / Edit Modal */}
       {showForm && (
         <Modal
           title={editingTask ? "Edit Task" : "New Task"}
@@ -245,7 +266,6 @@ const DashboardPage = () => {
         </Modal>
       )}
 
-      {/* Delete Modal */}
       {deleteTaskId !== null && (
         <DeleteTaskModal
           onConfirm={confirmDelete}
