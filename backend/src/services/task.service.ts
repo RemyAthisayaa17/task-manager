@@ -13,6 +13,7 @@ export const createTaskService = async (data: CreateTaskInput) => {
       status: TASK_STATUS.PENDING,
       isVoid: false,
       userId: data.userId,
+      createdBy: data.userId, // authenticated user creating the task
     },
   });
 };
@@ -61,6 +62,7 @@ export const updateTaskService = async (
       ...(updates.title && { title: updates.title }),
       ...(updates.description !== undefined && { description: updates.description }),
       ...(updates.status && { status: updates.status }),
+      updatedBy: userId, // always stamp who made this change
     },
   });
 };
@@ -73,7 +75,11 @@ export const deleteTaskService = async (taskId: number, userId: number, role: st
 
   return await prisma.task.update({
     where: { id: taskId },
-    data: { isVoid: true, isActive: false },
+    data: {
+      isVoid: true,
+      isActive: false,
+      updatedBy: userId, // soft-delete also counts as an update
+    },
   });
 };
 

@@ -12,7 +12,7 @@ export const registerService = async (data: RegisterInput) => {
 
   const hashedPassword = await hashPassword(data.password);
 
-  return await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       name: data.name,
       email: data.email,
@@ -20,6 +20,7 @@ export const registerService = async (data: RegisterInput) => {
       address: data.address,
       gender: data.gender,
       password: hashedPassword,
+      // createdBy is null on self-registration — no authenticated context above the user yet
     },
     select: {
       id: true,
@@ -32,6 +33,8 @@ export const registerService = async (data: RegisterInput) => {
       createdAt: true,
     },
   });
+
+  return user;
 };
 
 export const loginService = async (data: LoginInput) => {

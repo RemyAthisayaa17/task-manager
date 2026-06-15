@@ -1,13 +1,14 @@
 import { Response } from "express";
+import { HTTP_STATUS, HttpStatusValue } from "../constants/httpStatus";
 
 export const sendSuccess = (
   res: Response,
   message: string,
   data: unknown = null,
-  statusCode: number = 200
+  statusCode: HttpStatusValue = HTTP_STATUS.OK
 ): void => {
   res.status(statusCode).json({
-    success: true,
+    code: statusCode,
     message,
     data,
   });
@@ -16,17 +17,18 @@ export const sendSuccess = (
 export const sendError = (
   res: Response,
   message: string,
-  statusCode: number = 500,
+  statusCode: HttpStatusValue = HTTP_STATUS.SERVER_ERROR,
   errors: unknown = null
 ): void => {
-  const response: any = {
-    success: false,
+  const body: Record<string, unknown> = {
+    code: statusCode,
     message,
+    data: null,
   };
 
-  if (errors) {
-    response.errors = errors;
+  if (errors !== null) {
+    body.errors = errors;
   }
 
-  res.status(statusCode).json(response);
+  res.status(statusCode).json(body);
 };
