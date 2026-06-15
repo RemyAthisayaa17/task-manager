@@ -1,13 +1,10 @@
 import { Router } from "express";
 import {
   createTask,
-  getAllTasks,
+  getTasks,
   getTaskById,
   updateTask,
   deleteTask,
-  searchTasks,
-  filterTasks,
-  getPaginatedTasks,
 } from "../controllers/task.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { validate } from "../middleware/validate.middleware";
@@ -18,14 +15,11 @@ const router = Router();
 
 router.use(authMiddleware);
 
-// Query-based routes — must come BEFORE /:id
-router.get("/search", searchTasks);
-router.get("/filter", filterTasks);
-router.get("/paginated", getPaginatedTasks);
+// Issue #10: single unified GET /tasks?page=&limit=&search=&status=
+router.get("/", getTasks);
 
 // CRUD routes
 router.post("/", validate(createTaskSchema), createTask);
-router.get("/", getAllTasks);
 router.get("/:id", validateTaskId, getTaskById);
 router.put("/:id", validateTaskId, validate(updateTaskSchema), updateTask);
 router.delete("/:id", validateTaskId, deleteTask);
